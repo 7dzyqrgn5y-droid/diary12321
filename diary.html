@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Diary | Pro Ultra</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f5f5f7; 
+            --sidebar: rgba(242, 242, 247, 0.7); 
+            --card: rgba(255, 255, 255, 0.4); /* Glassmorphism Base */
+            --text: #1d1d1f; 
+            --accent: #0071e3; 
+            --border: rgba(210, 210, 215, 0.4); 
+            --secondary-text: #86868b;
+            --hover: rgba(0,0,0,0.05);
+            --glass: rgba(255, 255, 255, 0.7);
+        }
+        .dark-mode {
+            --bg: #000000; 
+            --sidebar: rgba(28, 28, 30, 0.7); 
+            --card: rgba(28, 28, 30, 0.4); /* Glassmorphism Base */
+            --text: #f5f5f7; 
+            --accent: #0a84ff; 
+            --border: rgba(56, 56, 58, 0.4); 
+            --secondary-text: #a1a1a6;
+            --hover: rgba(255,255,255,0.1);
+            --glass: rgba(28, 28, 30, 0.7);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        /* Dynamic Animated Background */
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+            transition: background 0.5s ease;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            width: 300px; height: 300px;
+            background: var(--accent);
+            filter: blur(150px);
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.15;
+            animation: moveBlob 15s infinite alternate ease-in-out;
+        }
+
+        @keyframes moveBlob {
+            from { top: -10%; left: -10%; }
+            to { top: 80%; left: 80%; }
+        }
+
+        /* Sidebar Glassmorphism */
+        .sidebar { 
+            width: 260px; 
+            background: var(--sidebar); 
+            backdrop-filter: blur(30px) saturate(180%); 
+            border-right: 1px solid var(--border); 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            z-index: 10;
+        }
+        .sidebar h2 { font-size: 22px; margin-bottom: 20px; padding-left: 10px; letter-spacing: -0.5px; }
+        
+        .sidebar-section { margin-bottom: 25px; }
+        .section-title { font-size: 11px; font-weight: 700; color: var(--secondary-text); padding: 10px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .nav-btn { all: unset; width: 100%; padding: 10px 12px; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 400; display: flex; align-items: center; gap: 12px; color: var(--text); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .nav-btn:hover { background: var(--hover); transform: translateX(5px); }
+        .nav-btn:active { transform: scale(0.95); } /* Micro-interaction */
+        .nav-btn.active { background: var(--accent); color: white; font-weight: 600; box-shadow: 0 8px 20px rgba(0, 113, 227, 0.3); }
+
+        #sidebar-album-list { display: none; flex-direction: column; margin-top: 5px; }
+
+        /* Main Content */
+        .main { flex: 1; padding: 40px; overflow-y: auto; scroll-behavior: smooth; z-index: 1; }
+        .page { display: none; animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+        .page.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+        h1 { font-size: 34px; font-weight: 700; letter-spacing: -1px; margin-bottom: 20px; }
+
+        /* Dashboard Widgets - Glass Upgrade */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 30px; }
+        .widget { 
+            background: var(--card); 
+            backdrop-filter: blur(15px);
+            padding: 30px 20px; 
+            border-radius: 22px; 
+            border: 1px solid var(--border); 
+            text-align: center; 
+            cursor: pointer; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        .widget:hover { 
+            transform: translateY(-10px) scale(1.02); 
+            background: rgba(255,255,255,0.6);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08); 
+            border-color: var(--accent); 
+        }
+        .widget:active { transform: scale(0.92); } /* Haptic feedback */
+        .widget-icon { font-size: 44px; margin-bottom: 15px; display: block; transition: 0.3s; }
+        .widget:hover .widget-icon { transform: rotate(10deg); }
+        .widget-title { font-weight: 600; font-size: 18px; }
+
+        /* Feeling & Notes - Glass Upgrade */
+        .status-container {
+            margin-top: 40px;
+            background: var(--card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 25px;
+            max-width: 800px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        }
+        .status-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+        .status-title { font-size: 13px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 0.5px; }
+        .feeling-badge { background: var(--accent); color: white; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 10px rgba(0, 113, 227, 0.2); }
+        .status-content { font-size: 18px; line-height: 1.6; margin-bottom: 20px; color: var(--text); font-style: italic; opacity: 0.9; }
+        .reaction-bar { display: flex; gap: 10px; border-top: 1px solid var(--border); padding-top: 15px; }
+        
+        .react-btn { 
+            background: var(--hover); border: none; padding: 8px 15px; border-radius: 12px; 
+            cursor: pointer; font-size: 14px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 6px;
+            color: var(--text); border: 1px solid transparent;
+        }
+        .react-btn:hover { background: var(--card); border-color: var(--accent); transform: scale(1.05); }
+        .react-btn:active { transform: scale(0.9); }
+        .react-btn.active { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(0, 113, 227, 0.2); }
+
+        /* Profile Styles */
+        .profile-header { display: flex; align-items: center; gap: 25px; margin-bottom: 30px; }
+        .profile-img { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 4px solid var(--card); box-shadow: 0 8px 24px rgba(0,0,0,0.12); transition: 0.4s; }
+        .profile-img:hover { transform: rotate(5deg) scale(1.05); }
+        .profile-container { background: var(--card); backdrop-filter: blur(15px); padding: 30px; border-radius: 24px; border: 1px solid var(--border); max-width: 650px; }
+        .profile-info { margin-bottom: 20px; }
+        .profile-info label { display: block; font-size: 11px; color: var(--secondary-text); font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
+        .profile-info p { font-size: 17px; font-weight: 500; }
+        
+        .fb-link { 
+            display: inline-flex; align-items: center; gap: 10px; text-decoration: none; 
+            background: #1877F2; color: white; padding: 10px 20px; border-radius: 12px;
+            font-weight: 600; margin-top: 15px; transition: 0.3s;
+        }
+        .fb-link:hover { opacity: 0.9; transform: translateY(-3px); box-shadow: 0 8px 15px rgba(24, 119, 242, 0.3); }
+
+        .ig-link { 
+            display: inline-flex; align-items: center; gap: 10px; text-decoration: none; 
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); 
+            color: white; padding: 10px 20px; border-radius: 12px;
+            font-weight: 600; margin-top: 15px; margin-left: 10px; transition: 0.3s;
+        }
+        .ig-link:hover { opacity: 0.9; transform: translateY(-3px); box-shadow: 0 8px 15px rgba(204, 35, 102, 0.3); }
+
+        /* Memories iOS UI */
+        .memories-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; margin-top: 20px; }
+        .memory-card { 
+            position: relative; border-radius: 24px; overflow: hidden; aspect-ratio: 4/5; 
+            cursor: pointer; transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .memory-card img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s; }
+        .memory-overlay { 
+            position: absolute; bottom: 0; left: 0; right: 0; padding: 30px 20px; 
+            background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white; 
+            transform: translateY(10px); transition: 0.4s;
+        }
+        .memory-card:hover { transform: scale(1.03); }
+        .memory-card:hover img { transform: scale(1.1); }
+        .memory-card:hover .memory-overlay { transform: translateY(0); }
+
+        /* Journey Timeline */
+        .journey-timeline { margin-top: 30px; position: relative; padding-left: 40px; }
+        .journey-timeline::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--border); border-radius: 3px; }
+        .journey-item { position: relative; margin-bottom: 50px; background: var(--card); backdrop-filter: blur(10px); padding: 25px; border-radius: 18px; border: 1px solid var(--border); transition: 0.3s; }
+        .journey-item:hover { border-color: var(--accent); transform: translateX(10px); }
+        .journey-item::after { 
+            content: ''; position: absolute; left: -47px; top: 30px; width: 14px; height: 14px; 
+            border-radius: 50%; background: var(--accent); border: 4px solid var(--bg); 
+            box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+        }
+        .journey-date { font-size: 12px; font-weight: 800; color: var(--accent); margin-bottom: 8px; }
+
+        /* Search & Albums Header */
+        .gallery-controls { display: flex; gap: 15px; margin-bottom: 30px; align-items: center; justify-content: center; }
+        .search-bar { background: var(--card); border: 1px solid var(--border); backdrop-filter: blur(10px); padding: 12px 20px; border-radius: 14px; width: 350px; outline: none; color: var(--text); font-size: 15px; transition: 0.3s; }
+        .search-bar:focus { width: 400px; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1); }
+
+        /* Album Grid */
+        .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px; }
+        .album-card { cursor: pointer; border-radius: 22px; overflow: hidden; position: relative; aspect-ratio: 1; border: 1px solid var(--border); transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
+        .album-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.15); }
+        .album-label { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 15px 15px; background: linear-gradient(transparent, rgba(0,0,0,0.85)); color: white; font-weight: 600; }
+
+        /* Photo Grid */
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+        .photo-item { aspect-ratio: 1; border-radius: 12px; overflow: hidden; cursor: pointer; border: 1px solid var(--border); transition: 0.3s; }
+        .photo-item:hover { opacity: 0.8; transform: scale(0.96); }
+        
+        .back-btn { color: var(--accent); cursor: pointer; font-weight: 600; margin-bottom: 25px; display: flex; align-items: center; gap: 5px; transition: 0.3s; }
+        .back-btn:hover { transform: translateX(-5px); }
+
+        /* Lightbox Upgrade */
+        .lightbox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(20px); transition: 0.5s; }
+        .lightbox img { max-width: 85%; max-height: 75%; border-radius: 12px; object-fit: contain; box-shadow: 0 0 50px rgba(0,0,0,0.5); transform: scale(0.9); animation: zoomIn 0.4s forwards cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes zoomIn { to { transform: scale(1); } }
+        .lightbox-title { color: white; margin-top: 25px; font-size: 20px; font-weight: 600; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .lightbox-nav { position: absolute; top: 50%; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; pointer-events: none; }
+        .nav-arrow { pointer-events: auto; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); color: white; border: 1px solid rgba(255,255,255,0.2); width: 60px; height: 60px; border-radius: 50%; font-size: 24px; cursor: pointer; transition: 0.3s; }
+        .nav-arrow:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
+        .close-lb { position: absolute; top: 30px; right: 40px; color: white; font-size: 30px; cursor: pointer; opacity: 0.6; transition: 0.2s; }
+        .close-lb:hover { opacity: 1; transform: rotate(90deg); }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="light-mode">
+
+<aside class="sidebar">
+    <h2>Diary</h2>
+    <div class="sidebar-section">
+        <!-- Dashboard Button is now active -->
+        <button id="nav-dashboard" class="nav-btn active" onclick="showPage('dashboard', this)"><span>🏠</span> Dashboard</button>
+        <button id="nav-profile" class="nav-btn" onclick="showPage('profile', this)"><span>👤</span> Profile</button>
+    </div>
+    <div class="sidebar-section">
+        <div class="section-title">Library</div>
+        <!-- Library button is now inactive -->
+        <button id="all-albums-btn" class="nav-btn" onclick="showPage('gallery', this); renderAlbums()"><span>📁</span> All Albums</button>
+        <div id="sidebar-album-list"></div>
+    </div>
+    <div style="flex:1"></div>
+    <button class="nav-btn" onclick="toggleDark()"><span>🌓</span> Appearance</button>
+</aside>
+
+<main class="main">
+    <!-- Dashboard Page is now active -->
+    <section id="dashboard-page" class="page active">
+        <h1>Welcome to My College Diary</h1>
+        <div class="dashboard-grid">
+            <div class="widget" onclick="showPage('profile', document.getElementById('nav-profile'))">
+                <span class="widget-icon">👤</span>
+                <span class="widget-title">My Profile</span>
+            </div>
+            <div class="widget" onclick="showPage('gallery', document.getElementById('all-albums-btn'))">
+                <span class="widget-icon">🖼️</span>
+                <span class="widget-title">Browse Albums</span>
+            </div>
+           
+            </div>
+            <div class="widget" onclick="showPage('journey', null)">
+                <span class="widget-icon">🛣️</span>
+                <span class="widget-title">My Journey</span>
+            </div>
+        </div>
+
+        <div class="status-container">
+            <div class="status-header">
+                <span class="status-title">Current Feeling</span>
+                <span class="feeling-badge"> Productive</span>
+            </div>
+            <div class="status-content">
+                "Helloworld"
+            </div>
+            <div class="reaction-bar">
+               
+            </div>
+        </div>
+
+        <div class="status-container">
+            <div class="status-header">
+                <span class="status-title">Current Feeling</span>
+                <span class="feeling-badge"> Happy</span>
+            </div>
+            <div class="status-content">
+                "ano tra
+            </div>
+            <div class="reaction-bar">
+              
+            </div>
+        </div>
+    </section>
+
+   <section id="profile-page" class="page">
+    <div class="back-btn" onclick="showPage('dashboard', document.getElementById('nav-dashboard'))">← Back to Dashboard</div>
+    <h1>Profile</h1>
+
+    <div class="profile-header">
+        <img src="c:\Users\joseph\Downloads\667871448_938786202345802_6605746810962456744_n.jpg" class="profile-img" alt="Joseph John Santos">
+        <div>
+            <h2 style="font-size: 32px; letter-spacing: -1px;">Joseph John Santos</h2>
+            <p style="color: var(--secondary-text); font-weight: 500;">BSIT Student</p>
+        </div>
+    </div>
+
+    <div class="profile-container">
+        <div class="profile-info">
+            <label>Course & Section</label>
+            <p>Bachelor of Science in Information Technology, 2-2</p>
+        </div>
+
+        <div class="profile-info">
+            <label>Personal Goal</label>
+            <p>hello world.</p>
+        </div>
+
+        <div class="profile-info">
+            <label>Contact</label>
+            <p>joseph.santos@college.edu</p>
+        </div>
+
+        <a href="https://www.facebook.com/joseph.santos.815375" target="_blank" class="fb-link">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" width="20" height="20">
+            Facebook Profile
+        </a>
+
+        <a href="https://www.instagram.com/hoytokyo/" target="_blank" class="ig-link">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" width="20" height="20">
+            Instagram Profile
+        </a>
+    </div>
+</section>
+
+    <!-- Gallery Page is now inactive -->
+    <section id="gallery-page" class="page">
+        <div class="back-btn" onclick="showPage('dashboard', document.getElementById('nav-dashboard'))">← Back to Dashboard</div>
+        <h2 style="text-align: center; margin-bottom: 20px; font-weight: 700; font-size: 28px;">Albums</h2>
+        <div class="gallery-controls" id="gallery-header">
+            <input type="text" class="search-bar" id="gallerySearch" placeholder="Search your diary..." oninput="handleSearch()">
+            <select class="filter-select" id="dateFilter" onchange="handleSort()" style="all: unset; background: var(--card); backdrop-filter: blur(10px); padding: 12px; border-radius: 12px; border: 1px solid var(--border); cursor: pointer;">
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+            </select>
+        </div>
+        <div id="album-grid-view" class="album-grid"></div>
+        <div id="photo-grid-view" class="hidden">
+            <div class="back-btn" onclick="renderAlbums()">← Back to Albums</div>
+            <h1 id="current-album-title">Album</h1>
+            <div class="photo-grid" id="photo-display"></div>
+        </div>
+    </section>
+
+    <section id="memories-page" class="page">
+        <div class="back-btn" onclick="showPage('dashboard', document.getElementById('nav-dashboard'))">← Back to Dashboard</div>
+        <h1>Memories</h1>
+        <div class="memories-container">
+            <div class="memory-card" onclick="openMemoryLightbox(0)">
+                <img src="photography/DSC_1939.jpg">
+                <div class="memory-overlay"><h3>Summer 2024</h3><p>Photography trip</p></div>
+            </div>
+            <div class="memory-card" onclick="openMemoryLightbox(1)">
+                <img src="schoollife/sportfest.jpg">
+                <div class="memory-overlay"><h3>Sports Fest</h3><p>Victory Celebration</p></div>
+            </div>
+            <div class="memory-card" onclick="openMemoryLightbox(2)">
+                <img src="familyfun/204851244_1170898003331328_943289159773368734_n.jpg">
+                <div class="memory-overlay"><h3>Early Days</h3><p>Throwback with Family</p></div>
+            </div>
+            <div class="memory-card" onclick="openMemoryLightbox(3)">
+                <img src="portraits/laptop.jpg">
+                <div class="memory-overlay"><h3>The Grind</h3><p>Late night coding sessions</p></div>
+            </div>
+            <div class="memory-card" onclick="openMemoryLightbox(4)">
+                <img src="photography/DSC_1372.jpg">
+                <div class="memory-overlay"><h3>Nature Escape</h3><p>Peaceful riverside view</p></div>
+            </div>
+            <div class="memory-card" onclick="openMemoryLightbox(5)">
+                <img src="schoollife/671645607_1697991288030492_7955623170484386981_n.jpg">
+                <div class="memory-overlay"><h3>Student Life</h3><p>Embracing the chaos</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="journey-page" class="page">
+        <div class="back-btn" onclick="showPage('dashboard', document.getElementById('nav-dashboard'))">← Back to Dashboard</div>
+        <h1>My College Journey</h1>
+        <div class="journey-timeline">
+            <div class="journey-item">
+                <p class="journey-date">AUGUST 2024</p>
+                <h3>School</h3>
+                <p>School has been a mix of challenges, lessons, and growth. Every day brings new experiences that shape who I am becoming. Through struggles and small wins, I continue to learn and improve as a student and as a person.</p>
+            </div>
+            <div class="journey-item">
+            
+    </section>
+    
+    
+</main>
+
+<div id="lightbox" class="lightbox">
+    <span class="close-lb" onclick="closeLightbox()">✕</span>
+    <img id="lightbox-img" src="">
+    <div class="lightbox-title" id="lightbox-txt"></div>
+    <div class="lightbox-nav">
+        <button class="nav-arrow" onclick="changePhoto(-1)">‹</button>
+        <button class="nav-arrow" onclick="changePhoto(1)">›</button>
+    </div>
+</div>
+
+<script>
+    const albums = [
+        { name: "Family", cover: "familyfun/204851244_1170898003331328_943289159773368734_n.jpg", date: "2012-05-01" },
+        { name: "School ", cover: "schoollife/sportfest.jpg", date: "2024-03-05" },
+       
+    ];
+
+  
+
+    const memoryPhotos = [
+        { title: "Hong Kong", url: "photography/DSC_1939.jpg" },
+        { title: "Zambales", url: "schoollife/sportfest.jpg" },
+        
+    ];
+
+    let currentPhotoIndex = 0;
+    let currentAlbumPhotos = [];
+
+    // Initialize Preferences
+    window.onload = () => {
+        if(localStorage.getItem('theme') === 'dark') toggleDark(true);
+        // This ensures the Dashboard is shown correctly on load
+        showPage('dashboard', document.getElementById('nav-dashboard'));
+        renderAlbums();
+    };
+
+    function showPage(id, btn) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id + '-page').classList.add('active');
+        document.querySelectorAll('.sidebar .nav-btn').forEach(b => b.classList.remove('active'));
+        if(btn) btn.classList.add('active');
+        else if (id === 'dashboard') document.getElementById('nav-dashboard').classList.add('active');
+        
+        if (id !== 'gallery') document.getElementById('sidebar-album-list').style.display = 'none';
+    }
+
+    function toggleDark(init = false) {
+        if(!init) document.body.classList.toggle('dark-mode');
+        else document.body.classList.add('dark-mode');
+        localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+    }
+
+    function addReaction(btn) {
+        let countSpan = btn.querySelector('.count');
+        let currentCount = parseInt(countSpan.innerText);
+        
+        if(btn.classList.contains('active')) {
+            btn.classList.remove('active');
+            countSpan.innerText = currentCount - 1;
+        } else {
+            btn.classList.add('active');
+            countSpan.innerText = currentCount + 1;
+            btn.style.transform = "scale(1.2)";
+            setTimeout(() => btn.style.transform = "scale(1)", 200);
+        }
+    }
+
+    function renderAlbums(query = "") {
+        const grid = document.getElementById('album-grid-view');
+        const sidebarList = document.getElementById('sidebar-album-list');
+        sidebarList.style.display = 'flex';
+        
+        document.getElementById('gallery-header').classList.remove('hidden');
+        grid.classList.remove('hidden');
+        document.getElementById('photo-grid-view').classList.add('hidden');
+
+        let filtered = albums.filter(a => a.name.toLowerCase().includes(query.toLowerCase()));
+        
+        grid.innerHTML = filtered.map(album => `
+            <div class="album-card" onclick="openAlbum('${album.name}')">
+                <img src="${album.cover}" style="width:100%;height:100%;object-fit:cover">
+                <div class="album-label">${album.name}</div>
+            </div>
+        `).join('');
+
+        sidebarList.innerHTML = albums.map(album => `
+            <button class="nav-btn" onclick="openAlbum('${album.name}')" style="padding-left:30px; font-size:13px; opacity:0.7">
+                ${album.name}
+            </button>
+        `).join('');
+    }
+
+    function openAlbum(name) {
+        showPage('gallery', document.getElementById('all-albums-btn'));
+        document.getElementById('gallery-header').classList.add('hidden');
+        document.getElementById('album-grid-view').classList.add('hidden');
+        document.getElementById('photo-grid-view').classList.remove('hidden');
+        document.getElementById('current-album-title').innerText = name;
+        
+        currentAlbumPhotos = photos.filter(p => p.album === name);
+        document.getElementById('photo-display').innerHTML = currentAlbumPhotos.map((p, index) => `
+            <div class="photo-item" onclick="openLightbox(${index})">
+                <img src="${p.url}" style="width:100%;height:100%;object-fit:cover">
+            </div>
+        `).join('');
+    }
+
+    function handleSearch() {
+        renderAlbums(document.getElementById('gallerySearch').value);
+    }
+
+    function handleSort() {
+        const sort = document.getElementById('dateFilter').value;
+        albums.sort((a,b) => sort === 'newest' ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date));
+        renderAlbums();
+    }
+
+    function openLightbox(index) {
+        currentPhotoIndex = index;
+        const photo = currentAlbumPhotos[index];
+        document.getElementById('lightbox-img').src = photo.url;
+        document.getElementById('lightbox-txt').innerText = photo.title;
+        document.getElementById('lightbox').style.display = "flex";
+    }
+
+    function openMemoryLightbox(index) {
+        currentPhotoIndex = index;
+        currentAlbumPhotos = memoryPhotos; // Temporarily swap for memory viewing
+        const photo = memoryPhotos[index];
+        document.getElementById('lightbox-img').src = photo.url;
+        document.getElementById('lightbox-txt').innerText = photo.title;
+        document.getElementById('lightbox').style.display = "flex";
+    }
+
+    function closeLightbox() {
+        document.getElementById('lightbox').style.display = "none";
+    }
+
+    function changePhoto(dir) {
+        currentPhotoIndex += dir;
+        if(currentPhotoIndex >= currentAlbumPhotos.length) currentPhotoIndex = 0;
+        if(currentPhotoIndex < 0) currentPhotoIndex = currentAlbumPhotos.length - 1;
+        const p = currentAlbumPhotos[currentPhotoIndex];
+        document.getElementById('lightbox-img').src = p.url;
+        document.getElementById('lightbox-txt').innerText = p.title;
+    }
+</script>
+
+</body>
+</html>
